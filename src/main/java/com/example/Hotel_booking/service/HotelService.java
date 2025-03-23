@@ -4,12 +4,18 @@ import com.example.Hotel_booking.model.Hotel;
 import com.example.Hotel_booking.model.Review;
 import com.example.Hotel_booking.repository.HotelRepository;
 import com.example.Hotel_booking.repository.ReviewRepository;
+import com.example.Hotel_booking.request.HotelFilterRequest;
 import com.example.Hotel_booking.request.HotelRequest;
 import com.example.Hotel_booking.request.ReviewRequest;
+import com.example.Hotel_booking.response.HotelFilterResponse;
 import com.example.Hotel_booking.response.HotelReponse;
 import com.example.Hotel_booking.response.ReviewResponse;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,7 +67,13 @@ public class HotelService {
         return hotelRepository.findAll();
     }
     public HotelReponse getHotelDetail(Long hotelId) {
-        Hotel hotel= hotelRepository.findById(hotelId).orElseThrow(() -> new RuntimeException("Hotel not found"));
+        if (hotelId == null) {
+            throw new IllegalArgumentException("Hotel ID cannot be null");
+        }
+        
+        Hotel hotel = hotelRepository.findById(hotelId)
+                .orElseThrow(() -> new RuntimeException("Hotel not found with ID: " + hotelId));
+        
         return toHotelReponse(hotel);
     }
 
@@ -70,7 +82,6 @@ public class HotelService {
     }
     public HotelReponse toHotelReponse(Hotel hotel) {
         List<ReviewResponse> reviewResponses = reviewService.getReviewsByHotelId(hotel.getHotelId());
-
         return HotelReponse.builder()
                 .hotelId(hotel.getHotelId())
                 .title(hotel.getTitle())
@@ -80,7 +91,34 @@ public class HotelService {
                 .ratings(hotel.getRatings())
                 .images(hotel.getImages())
                 .benefits(hotel.getBenefits())
-                .reviews(reviewResponses) // Nhận dữ liệu từ ReviewService
+                .reviews(reviewResponses)
                 .build();
+    }
+    public HotelFilterResponse filterHotels(HotelFilterRequest request) {
+        Sort.Direction direction = "desc".equalsIgnoreCase(request.getSortDirection()) ?
+                Sort.Direction.DESC : Sort.Direction.ASC;
+        
+        Pageable pageable = PageRequest.of(
+            request.getPage(), 
+            request.getSize(), 
+            Sort.by(direction, request.getSortBy())
+        );
+        
+        Page<Hotel> hotelPage = hotelRepository.filterHotels(
+            request.getCity(),
+            request.getMinPrice(),
+            request.getMaxPrice(),
+            request.getMinRating(),
+            request.getMaxRating(),
+            request.getNumOfGuests(),
+            request.getKeyword(),
+            pageable
+        );
+        return new HotelFilterResponse(
+            hotelPage.getContent(),
+            hotelPage.getTotalElements(),
+            hotelPage.getTotalPages(),
+            hotelPage.getNumber()
+        );
     }
 } 

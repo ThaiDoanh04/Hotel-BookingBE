@@ -18,11 +18,12 @@ public class Hotel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long hotelId;
     private List<String> images = new ArrayList<>();
+    
     private String title;
     private String subtitle;
     private List<String> benefits = new ArrayList<>();
+    
     private BigDecimal price;
     private Double ratings;
     private String city;
-
 } 

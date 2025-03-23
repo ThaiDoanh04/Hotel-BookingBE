@@ -2,6 +2,7 @@ package com.example.Hotel_booking.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.time.LocalDateTime;
 
 import java.util.Set;
 
@@ -33,4 +34,8 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private Role role;
+    
+    // Thêm các trường để quản lý OTP
+    private String otpCode;
+    private LocalDateTime otpExpiration;
 }
