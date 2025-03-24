@@ -1,4 +1,3 @@
-
 package com.example.Hotel_booking.service;
 
 import com.example.Hotel_booking.model.BookedHotel;
@@ -7,11 +6,8 @@ import com.example.Hotel_booking.request.BookingRequest;
 import com.example.Hotel_booking.response.BookingResponse;
 import com.example.Hotel_booking.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -26,7 +22,12 @@ public class BookingService {
 
     public BookingResponse createBooking(BookingRequest request,String token) {
         String email = jwtUtil.extractEmail(token);
-        validateBookingDates(request.getCheckInDate(), request.getCheckOutDate());
+        if (request.getCheckInDate() == null || request.getCheckOutDate() == null) {
+            throw new RuntimeException("Check-in date và check-out date không được để trống.");
+        }
+        if (!request.getCheckInDate().isBefore(request.getCheckOutDate())) {
+            throw new RuntimeException("Check-in date phải trước check-out date.");
+        }
 
         BookedHotel bookedHotel = new BookedHotel();
         bookedHotel.setCheckInDate(request.getCheckInDate());
@@ -62,15 +63,6 @@ public class BookingService {
         bookingRepository.delete(bookedHotel);
     }
 
-
-    private void validateBookingDates(LocalDate checkInDate, LocalDate checkOutDate) {
-        if (checkInDate == null || checkOutDate == null) {
-            throw new RuntimeException("Check-in date and check-out date must not be null");
-        }
-        if (!checkInDate.isBefore(checkOutDate)) {
-            throw new RuntimeException("Check-in date must be before check-out date");
-        }
-    }
 
     private BookingResponse mapToResponse(BookedHotel bookedHotel) {
         return new BookingResponse(
