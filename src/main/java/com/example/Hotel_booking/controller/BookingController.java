@@ -17,30 +17,31 @@ public class BookingController {
     @Autowired
     private BookingService bookingService;
 
-    // Tạo booking mới
     @PostMapping("/create")
     public ResponseEntity<BookingResponse> createBooking(
             @RequestBody BookingRequest request,
             @RequestHeader("Authorization") String token) {
 
-        // Loại bỏ tiền tố "Bearer "
         String jwt = token.replace("Bearer ", "");
 
         BookingResponse response = bookingService.createBooking(request, jwt);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // Lấy thông tin booking theo confirmation code
     @GetMapping("/confirmation/{confirmationCode}")
     public ResponseEntity<BookingResponse> getBooking(@PathVariable String confirmationCode) {
         BookingResponse response = bookingService.getBookingByConfirmationCode(confirmationCode);
         return ResponseEntity.ok(response);
     }
 
-    // Lấy tất cả booking của một khách hàng theo email
     @GetMapping("/customer/{customerId}")
     public ResponseEntity<List<BookingResponse>> getBookingsByCustomer(@PathVariable String customerId) {
         List<BookingResponse> responses = bookingService.getBookingsByCustomerId(customerId);
         return ResponseEntity.ok(responses);
+    }
+    @DeleteMapping("/cancel/{bookingId}")
+    public ResponseEntity<Void> cancelBooking(@PathVariable Long bookingId) {
+        bookingService.cancelBooking(bookingId);
+        return ResponseEntity.noContent().build();
     }
 }
