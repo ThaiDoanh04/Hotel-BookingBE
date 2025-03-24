@@ -6,21 +6,17 @@ import lombok.Data;
 
 @Data
 public class UpdateUserRequest {
-    @Email(message = "Please provide a valid email address")
-    @NotBlank(message = "Email is required")
+    @Email(message = "Vui lòng cung cấp địa chỉ email hợp lệ")
+    @NotBlank(message = "Email là bắt buộc")
     private String email;
 
-    @NotBlank(message = "First name is required")
+    @NotBlank(message = "First name là bắt buộc")
     private String firstName;
 
-    @NotBlank(message = "Last name is required")
+    @NotBlank(message = "Last name là bắt buộc")
     private String lastName;
 
-    @NotBlank(message = "Phone number is required")
+    @NotBlank(message = "Phone number là bắt buộc")
     private String phoneNumber;
     
-    // Password fields are optional for updates
-    private String currentPassword;
-    private String newPassword;
-    private String confirmNewPassword;
 } 

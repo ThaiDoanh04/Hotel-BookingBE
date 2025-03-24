@@ -8,6 +8,7 @@ import com.example.Hotel_booking.request.UpdateUserRequest;
 import com.example.Hotel_booking.request.RequestOtpRequest;
 import com.example.Hotel_booking.request.VerifyOtpRequest;
 import com.example.Hotel_booking.request.ResetPasswordRequest;
+import com.example.Hotel_booking.request.ChangePasswordRequest;
 import com.example.Hotel_booking.response.AuthResponse;
 import com.example.Hotel_booking.response.MessageResponse;
 import com.example.Hotel_booking.service.AuthService;
@@ -36,8 +37,12 @@ public class AuthController {
     }
     @PostMapping("/update-profile")
     public ResponseEntity<MessageResponse> updateProfile(@RequestBody UpdateUserRequest request) {
-        String message = authService.updateUserProfile(request);
-        return ResponseEntity.ok(new MessageResponse(message));
+        try {
+            String message = authService.updateUserProfile(request);
+            return ResponseEntity.ok(new MessageResponse(message));
+        } catch (RuntimeException e) {
+            return ResponseEntity.ok(new MessageResponse(e.getMessage()));
+        }
     }
 
     @PostMapping("/forgot-password")
@@ -62,5 +67,21 @@ public class AuthController {
     public ResponseEntity<MessageResponse> resetPassword(@RequestBody ResetPasswordRequest request) {
         String message = authService.resetPassword(request);
         return ResponseEntity.ok(new MessageResponse(message));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<MessageResponse> changePassword(
+            @RequestBody ChangePasswordRequest request,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            // Lấy token từ header
+            System.out.println("vao");
+            String token = authHeader.substring(7); // Bỏ "Bearer " ở đầu
+            System.out.println(token);
+            String message = authService.changePassword(token, request);
+            return ResponseEntity.ok(new MessageResponse(message));
+        } catch (RuntimeException e) {
+            return ResponseEntity.ok(new MessageResponse(e.getMessage()));
+        }
     }
 }

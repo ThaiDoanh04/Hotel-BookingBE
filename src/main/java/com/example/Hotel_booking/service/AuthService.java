@@ -11,6 +11,7 @@ import com.example.Hotel_booking.request.ForgotPasswordRequest;
 import com.example.Hotel_booking.request.RequestOtpRequest;
 import com.example.Hotel_booking.request.VerifyOtpRequest;
 import com.example.Hotel_booking.request.ResetPasswordRequest;
+import com.example.Hotel_booking.request.ChangePasswordRequest;
 import com.example.Hotel_booking.response.AuthResponse;
 import com.example.Hotel_booking.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -72,35 +73,40 @@ public class AuthService {
     }
 
     public String updateUserProfile(UpdateUserRequest request) {
-        // Get user by email
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found!"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với email này!"));
         
-        // Update basic info
+        // Cập nhật thông tin cơ bản
         user.setFirstName(request.getFirstName());
         user.setLastName(request.getLastName());
         user.setPhoneNumber(request.getPhoneNumber());
         
-        // If password change is requested
-        if (request.getNewPassword() != null && !request.getNewPassword().isEmpty()) {
-            // Verify current password if provided
-            if (request.getCurrentPassword() != null && !request.getCurrentPassword().isEmpty()) {
-                if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
-                    throw new RuntimeException("Current password is incorrect!");
-                }
-            }
-            
-            // Validate new password matches confirmation
-            if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
-                throw new RuntimeException("New passwords do not match!");
-            }
-            
-            // Update password
-            user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        return "Cập nhật thông tin thành công!";
+    }
+
+    public String changePassword(String token, ChangePasswordRequest request) {
+        // Lấy email từ token
+        String email = jwtUtil.extractEmail(token);
+        System.out.println(email);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
+        
+        // Kiểm tra mật khẩu hiện tại
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new RuntimeException("Mật khẩu hiện tại không chính xác!");
         }
         
+        // Kiểm tra mật khẩu mới và xác nhận mật khẩu
+        if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+            throw new RuntimeException("Mật khẩu mới không khớp!");
+        }
+        
+        // Cập nhật mật khẩu mới
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        
         userRepository.save(user);
-        return "User profile updated successfully!";
+        return "Đổi mật khẩu thành công!";
     }
 
     public String forgotPassword(ForgotPasswordRequest request) {
