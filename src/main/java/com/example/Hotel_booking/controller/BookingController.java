@@ -1,7 +1,7 @@
 package com.example.Hotel_booking.controller;
 
-import com.example.Hotel_booking.dto.BookingRequest;
-import com.example.Hotel_booking.dto.BookingResponse;
+import com.example.Hotel_booking.request.BookingRequest;
+import com.example.Hotel_booking.response.BookingResponse;
 import com.example.Hotel_booking.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,29 +19,28 @@ public class BookingController {
 
     // Tạo booking mới
     @PostMapping("/create")
-    public ResponseEntity<BookingResponse> createBooking(@RequestBody BookingRequest bookingRequest) {
-        BookingResponse response = bookingService.createBooking(bookingRequest);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    public ResponseEntity<BookingResponse> createBooking(
+            @RequestBody BookingRequest request,
+            @RequestHeader("Authorization") String token) {
+
+        // Loại bỏ tiền tố "Bearer "
+        String jwt = token.replace("Bearer ", "");
+
+        BookingResponse response = bookingService.createBooking(request, jwt);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     // Lấy thông tin booking theo confirmation code
-    @GetMapping("/{confirmationCode}")
+    @GetMapping("/confirmation/{confirmationCode}")
     public ResponseEntity<BookingResponse> getBooking(@PathVariable String confirmationCode) {
         BookingResponse response = bookingService.getBookingByConfirmationCode(confirmationCode);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 
-    // Lấy tất cả booking của một khách hàng theo customerId (email)
+    // Lấy tất cả booking của một khách hàng theo email
     @GetMapping("/customer/{customerId}")
     public ResponseEntity<List<BookingResponse>> getBookingsByCustomer(@PathVariable String customerId) {
         List<BookingResponse> responses = bookingService.getBookingsByCustomerId(customerId);
-        return new ResponseEntity<>(responses, HttpStatus.OK);
-    }
-
-    // Hủy booking theo bookingId
-    @DeleteMapping("/cancel/{bookingId}")
-    public ResponseEntity<String> cancelBooking(@PathVariable Long bookingId) {
-        bookingService.cancelBooking(bookingId);
-        return new ResponseEntity<>("Booking cancelled successfully", HttpStatus.OK);
+        return ResponseEntity.ok(responses);
     }
 }

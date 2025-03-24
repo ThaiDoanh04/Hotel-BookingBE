@@ -1,4 +1,4 @@
-package com.example.Hotel_booking.dto;
+package com.example.Hotel_booking.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,7 +15,7 @@ public class BookingRequest {
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
     private String guestFullName;
-    private String guestEmail;
+    //private String guestEmail;
     private int numOfAdults;
     private int numOfChildren;
     private Long hotelId;

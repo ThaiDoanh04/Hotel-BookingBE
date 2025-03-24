@@ -48,6 +48,7 @@ public class SecurityConfig {
                 .permitAll()
                 .requestMatchers(HttpMethod.GET, PUBLIC_ENDPOINTS)
                 .permitAll()
+                .requestMatchers(HttpMethod.DELETE, PUBLIC_ENDPOINTS).permitAll()
                 .anyRequest()
                 .authenticated());
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
