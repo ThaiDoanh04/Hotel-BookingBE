@@ -38,8 +38,8 @@ public class HotelService {
         hotel.setSubtitle(request.getSubtitle());
         hotel.setBenefits(request.getBenefits());
         hotel.setPrice(request.getPrice());
-        hotel.setRatings(request.getRatings());
         hotel.setCity(request.getCity());
+        hotel.setRatings(0.0);
         return hotelRepository.save(hotel);
     }
 
@@ -53,27 +53,49 @@ public class HotelService {
         return review;
     }
 
-
     @Transactional
     public Review addReview(Long hotelId, ReviewRequest reviewRequest) {
         Hotel hotel = hotelRepository.findById(hotelId)
                 .orElseThrow(() -> new RuntimeException("Hotel not found"));
+        
         Review review = convertToReview(reviewRequest);
         review.setHotelId(hotelId);
         reviewRepository.save(review);
+
+        updateHotelRating(hotelId);
+        
         return review;
     }
+
+    private void updateHotelRating(Long hotelId) {
+        List<Review> reviews = reviewRepository.findByHotelId(hotelId);
+        if (!reviews.isEmpty()) {
+            double averageRating = reviews.stream()
+                    .mapToInt(Review::getRating)
+                    .average()
+                    .orElse(0.0);
+            
+            double roundedRating = Math.round(averageRating * 10.0) / 10.0;
+            
+            Hotel hotel = hotelRepository.findById(hotelId)
+                    .orElseThrow(() -> new RuntimeException("Hotel not found"));
+            hotel.setRatings(roundedRating);
+            hotelRepository.save(hotel);
+        }
+    }
+
     public List<Hotel> getHotel() {
+        System.out.println("vao");
         return hotelRepository.findAll();
     }
     public HotelReponse getHotelDetail(Long hotelId) {
         if (hotelId == null) {
             throw new IllegalArgumentException("Hotel ID cannot be null");
         }
-        
+
         Hotel hotel = hotelRepository.findById(hotelId)
                 .orElseThrow(() -> new RuntimeException("Hotel not found with ID: " + hotelId));
-        
+
         return toHotelReponse(hotel);
     }
 
@@ -97,28 +119,28 @@ public class HotelService {
     public HotelFilterResponse filterHotels(HotelFilterRequest request) {
         Sort.Direction direction = "desc".equalsIgnoreCase(request.getSortDirection()) ?
                 Sort.Direction.DESC : Sort.Direction.ASC;
-        
+
         Pageable pageable = PageRequest.of(
-            request.getPage(), 
-            request.getSize(), 
-            Sort.by(direction, request.getSortBy())
+                request.getPage(),
+                request.getSize(),
+                Sort.by(direction, request.getSortBy())
         );
-        
+
         Page<Hotel> hotelPage = hotelRepository.filterHotels(
-            request.getCity(),
-            request.getMinPrice(),
-            request.getMaxPrice(),
-            request.getMinRating(),
-            request.getMaxRating(),
-            request.getNumOfGuests(),
-            request.getKeyword(),
-            pageable
+                request.getCity(),
+                request.getMinPrice(),
+                request.getMaxPrice(),
+                request.getMinRating(),
+                request.getMaxRating(),
+                request.getNumOfGuests(),
+                request.getKeyword(),
+                pageable
         );
         return new HotelFilterResponse(
-            hotelPage.getContent(),
-            hotelPage.getTotalElements(),
-            hotelPage.getTotalPages(),
-            hotelPage.getNumber()
+                hotelPage.getContent(),
+                hotelPage.getTotalElements(),
+                hotelPage.getTotalPages(),
+                hotelPage.getNumber()
         );
     }
 } 

@@ -12,6 +12,5 @@ public class HotelRequest {
     private String subtitle;
     private List<String> benefits;
     private BigDecimal price;
-    private Double ratings;
     private String city;
 }
