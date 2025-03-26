@@ -28,4 +28,7 @@ public class Hotel {
     private BigDecimal price;
     private Double ratings;
     private String city;
+
+    @Column(name = "max_guests")
+    private Integer maxGuests = 4; // Mặc định 4 khách
 } 

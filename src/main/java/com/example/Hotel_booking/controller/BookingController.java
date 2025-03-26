@@ -39,9 +39,33 @@ public class BookingController {
         List<BookingResponse> responses = bookingService.getBookingsByCustomerId(customerId);
         return ResponseEntity.ok(responses);
     }
+
     @DeleteMapping("/cancel/{bookingId}")
     public ResponseEntity<Void> cancelBooking(@PathVariable Long bookingId) {
         bookingService.cancelBooking(bookingId);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Lấy tất cả booking trong hệ thống
+     * Chỉ admin mới nên có quyền truy cập endpoint này
+     */
+    @GetMapping
+    public ResponseEntity<List<BookingResponse>> getBooking() {
+        List<BookingResponse> responses = bookingService.getAllBookings();
+        return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * Lấy booking theo ID
+     */
+    @GetMapping("/{bookingId}")
+    public ResponseEntity<BookingResponse> getBookingById(@PathVariable Long bookingId) {
+        try {
+            BookingResponse response = bookingService.getBookingById(bookingId);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 }

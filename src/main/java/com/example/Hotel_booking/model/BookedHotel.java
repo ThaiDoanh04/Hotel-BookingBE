@@ -6,7 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * @author Simpson Alfred
@@ -19,7 +21,7 @@ import java.time.LocalDate;
 public class BookedHotel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private  Long bookingId;
+    private Long bookingId;
 
     @Column(name = "check_in")
     private LocalDate checkInDate;
@@ -33,32 +35,30 @@ public class BookedHotel {
     @Column(name = "guest_email")
     private String guestEmail;
 
-    @Column(name = "adults")
-    private int NumOfAdults;
+    @Column(name = "number_of_guests")
+    private int numberOfGuests;
 
-    @Column(name = "children")
-    private int NumOfChildren;
+    @Column(name = "number_of_rooms")
+    private int numberOfRooms = 1;
 
-    @Column(name = "total_guest")
-    private int totalNumOfGuest;
+    @Column(name = "price_per_night")
+    private BigDecimal pricePerNight;
 
-    @Column(name = "confirmation_Code")
+    @Column(name = "total_amount")
+    private BigDecimal totalAmount;
+
+    @Column(name = "confirmation_code")
     private String bookingConfirmationCode;
+
+    @Column(name = "hotel_id")
     private Long hotelId;
 
-    public void calculateTotalNumberOfGuest(){
-        this.totalNumOfGuest = this.NumOfAdults + NumOfChildren;
-    }
-
-    public void setNumOfAdults(int numOfAdults) {
-        NumOfAdults = numOfAdults;
-        calculateTotalNumberOfGuest();
-    }
-
-    public void setNumOfChildren(int numOfChildren) {
-        NumOfChildren = numOfChildren;
-        calculateTotalNumberOfGuest();
-    }
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_status")
+    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
+    
+    @Column(name = "payment_date")
+    private LocalDateTime paymentDate;
 
     public void setBookingConfirmationCode(String bookingConfirmationCode) {
         this.bookingConfirmationCode = bookingConfirmationCode;

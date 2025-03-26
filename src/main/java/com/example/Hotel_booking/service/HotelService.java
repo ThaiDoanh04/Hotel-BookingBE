@@ -1,7 +1,9 @@
 package com.example.Hotel_booking.service;
 
+import com.example.Hotel_booking.model.BookedHotel;
 import com.example.Hotel_booking.model.Hotel;
 import com.example.Hotel_booking.model.Review;
+import com.example.Hotel_booking.repository.BookingRepository;
 import com.example.Hotel_booking.repository.HotelRepository;
 import com.example.Hotel_booking.repository.ReviewRepository;
 import com.example.Hotel_booking.request.HotelFilterRequest;
@@ -19,6 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -29,6 +32,7 @@ public class HotelService {
     private final HotelRepository hotelRepository;
     private final ReviewRepository reviewRepository;
     private final ReviewService reviewService;
+    private final BookingRepository bookingRepository;
 
     @Transactional
     public Hotel addHotel(HotelRequest request) {
@@ -117,30 +121,84 @@ public class HotelService {
                 .build();
     }
     public HotelFilterResponse filterHotels(HotelFilterRequest request) {
+        // Xác định hướng sắp xếp (mặc định tăng dần theo giá)
         Sort.Direction direction = "desc".equalsIgnoreCase(request.getSortDirection()) ?
                 Sort.Direction.DESC : Sort.Direction.ASC;
-
+        
+        String sortField = "price"; // Luôn sắp xếp theo giá
+        
         Pageable pageable = PageRequest.of(
                 request.getPage(),
                 request.getSize(),
-                Sort.by(direction, request.getSortBy())
+                Sort.by(direction, sortField)
         );
-
+        
+        // Đảm bảo giá trị filter hợp lệ
+        BigDecimal minPrice = request.getMinPrice() != null ? request.getMinPrice() : BigDecimal.ZERO;
+        BigDecimal maxPrice = request.getMaxPrice() != null ? request.getMaxPrice() : new BigDecimal("999999999");
+        
+        Double minRating = request.getMinRating() != null ? request.getMinRating() : 0.0;
+        Double maxRating = request.getMaxRating() != null ? request.getMaxRating() : 5.0;
+        
         Page<Hotel> hotelPage = hotelRepository.filterHotels(
                 request.getCity(),
-                request.getMinPrice(),
-                request.getMaxPrice(),
-                request.getMinRating(),
-                request.getMaxRating(),
+                minPrice,
+                maxPrice,
+                minRating,
+                maxRating,
                 request.getNumOfGuests(),
-                request.getKeyword(),
                 pageable
         );
+        
         return new HotelFilterResponse(
                 hotelPage.getContent(),
                 hotelPage.getTotalElements(),
                 hotelPage.getTotalPages(),
                 hotelPage.getNumber()
         );
+    }
+
+    /**
+     * Search hotels theo city và số lượng khách
+     */
+    public List<Hotel> searchHotels(String city, Integer numOfGuests) {
+        return hotelRepository.searchByBasicCriteria(city, numOfGuests);
+    }
+
+    public HotelReponse updateHotel(Long hotelId, HotelRequest request) {
+        Hotel hotel = hotelRepository.findById(hotelId)
+            .orElseThrow(() -> new RuntimeException("Hotel not found with ID: " + hotelId));
+
+        // Cập nhật thông tin
+        hotel.setTitle(request.getTitle());
+        hotel.setSubtitle(request.getSubtitle());
+        hotel.setCity(request.getCity());
+        hotel.setPrice(request.getPrice());
+        hotel.setImages(request.getImages());
+        hotel.setBenefits(request.getBenefits());
+        
+        // Lưu vào database
+        Hotel updatedHotel = hotelRepository.save(hotel);
+        
+        // Chuyển đổi và trả về response
+        return toHotelReponse(updatedHotel);
+    }
+
+    @Transactional
+    public void deleteHotel(Long hotelId) {
+        Hotel hotel = hotelRepository.findById(hotelId)
+            .orElseThrow(() -> new RuntimeException("Hotel not found with ID: " + hotelId));
+        
+        // Kiểm tra xem có booking nào liên quan không
+        List<BookedHotel> bookings = bookingRepository.findByHotelId(hotelId);
+        if (!bookings.isEmpty()) {
+            throw new RuntimeException("Cannot delete hotel with existing bookings");
+        }
+        
+        // Xóa reviews trước (nếu có)
+        reviewRepository.deleteByHotelId(hotelId);
+        
+        // Xóa hotel
+        hotelRepository.delete(hotel);
     }
 } 

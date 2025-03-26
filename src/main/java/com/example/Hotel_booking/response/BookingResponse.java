@@ -4,11 +4,15 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
-@Getter
-@Setter
+import com.example.Hotel_booking.model.PaymentStatus;
+
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class BookingResponse {
@@ -17,9 +21,12 @@ public class BookingResponse {
     private LocalDate checkOutDate;
     private String guestFullName;
     private String guestEmail;
-    private int numOfAdults;
-    private int numOfChildren;
-    private int totalNumOfGuest;
+    private int numberOfGuests;
+    private int numberOfRooms;
+    private BigDecimal pricePerNight;
+    private BigDecimal totalAmount;
     private String bookingConfirmationCode;
     private Long hotelId;
+    private PaymentStatus paymentStatus;
+    private LocalDateTime paymentDate;
 }
