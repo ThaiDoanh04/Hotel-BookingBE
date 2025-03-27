@@ -7,4 +7,6 @@ import lombok.Data;
 @AllArgsConstructor
 public class AuthResponse {
     private String token;
+    private int role; // Giá trị số của role (0: USER, 1: ADMIN)
+
 }

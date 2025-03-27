@@ -3,6 +3,7 @@ package com.example.Hotel_booking.service;
 
 
 
+import com.example.Hotel_booking.model.Role;
 import com.example.Hotel_booking.model.User;
 import com.example.Hotel_booking.repository.UserRepository;
 import com.example.Hotel_booking.request.AuthRequest;
@@ -53,7 +54,7 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPhoneNumber(request.getPhoneNumber());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(request.getRole());
+        user.setRole(Role.USER);
 
         userRepository.save(user);
         return "User registered successfully!";
@@ -61,14 +62,16 @@ public class AuthService {
 
     public AuthResponse login(AuthRequest request) {
         Optional<User> userOptional = userRepository.findByEmail(request.getEmail());
-
+    
         if (userOptional.isPresent() &&
                 passwordEncoder.matches(request.getPassword(), userOptional.get().getPassword())) {
-            String token = jwtUtil.generateToken(request.getEmail());
-            return new AuthResponse(token);
+            User user = userOptional.get();
+            String token = jwtUtil.generateToken(user.getEmail());
+            
+            // Chỉ trả về token và role
+            return new AuthResponse(token, user.getRole().getValue());
         } else {
-            throw new RuntimeException("Invalid " +
-                    "!");
+            throw new RuntimeException("Email hoặc mật khẩu không chính xác!");
         }
     }
 

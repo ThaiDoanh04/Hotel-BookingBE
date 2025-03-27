@@ -68,4 +68,10 @@ public class BookingController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<BookingResponse>> getBookingsByUserId(@PathVariable Long userId) {
+        List<BookingResponse> bookings = bookingService.getBookingsByUserId(userId);
+        return ResponseEntity.ok(bookings);
+    }
 }

@@ -3,8 +3,10 @@ package com.example.Hotel_booking.service;
 import com.example.Hotel_booking.model.BookedHotel;
 import com.example.Hotel_booking.model.Hotel;
 import com.example.Hotel_booking.model.PaymentStatus;
+import com.example.Hotel_booking.model.User;
 import com.example.Hotel_booking.repository.BookingRepository;
 import com.example.Hotel_booking.repository.HotelRepository;
+import com.example.Hotel_booking.repository.UserRepository;
 import com.example.Hotel_booking.request.BookingRequest;
 import com.example.Hotel_booking.response.BookingResponse;
 import com.example.Hotel_booking.security.JwtUtil;
@@ -27,12 +29,18 @@ public class BookingService {
     private HotelRepository hotelRepository;
     @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * Tính tổng tiền bao gồm cả thuế 8%
      */
     public BookingResponse createBooking(BookingRequest request, String token) {
         String email = jwtUtil.extractEmail(token);
+        
+        // Tìm userId từ email
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với email: " + email));
         
         // Validate dates
         if (request.getCheckInDate() == null || request.getCheckOutDate() == null) {
@@ -80,6 +88,7 @@ public class BookingService {
         bookedHotel.setHotelId(request.getHotelId());
         bookedHotel.setBookingConfirmationCode(UUID.randomUUID().toString());
         bookedHotel.setPaymentStatus(PaymentStatus.PENDING);
+        bookedHotel.setUserId(user.getUserId());
 
         return mapToResponse(bookingRepository.save(bookedHotel));
     }
@@ -115,6 +124,23 @@ public class BookingService {
         BookedHotel bookedHotel = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy booking với ID: " + bookingId));
         return mapToResponse(bookedHotel);
+    }
+
+    /**
+     * Lấy danh sách booking theo ID của người dùng
+     * @param userId ID của người dùng
+     * @return Danh sách các booking
+     */
+    public List<BookingResponse> getBookingsByUserId(Long userId) {
+        List<BookedHotel> bookings = bookingRepository.findByUserId(userId);
+        
+        return bookings.stream()
+            .map(booking -> {
+                // Giả sử bạn đã có một constructor hoặc một builder pattern trong BookingResponse
+                // Nếu chưa có, hãy tạo một phương thức chuyển đổi từ Booking sang BookingResponse
+                return mapToResponse(booking);
+            })
+            .collect(Collectors.toList());
     }
 
     private BookingResponse mapToResponse(BookedHotel bookedHotel) {

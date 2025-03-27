@@ -59,6 +59,7 @@ public class BookedHotel {
     
     @Column(name = "payment_date")
     private LocalDateTime paymentDate;
+    private Long userId;
 
     public void setBookingConfirmationCode(String bookingConfirmationCode) {
         this.bookingConfirmationCode = bookingConfirmationCode;

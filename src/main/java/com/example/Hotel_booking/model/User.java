@@ -15,7 +15,7 @@ import java.util.Set;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long userId;
 
     @Column(nullable = false)
     private String firstName;
@@ -32,8 +32,8 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
+    @Enumerated(EnumType.ORDINAL) 
+    private Role role = Role.USER; 
     
     // Thêm các trường để quản lý OTP
     private String otpCode;
