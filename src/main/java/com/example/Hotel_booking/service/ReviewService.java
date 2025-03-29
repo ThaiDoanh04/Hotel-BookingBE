@@ -1,6 +1,7 @@
 package com.example.Hotel_booking.service;
 
 import com.example.Hotel_booking.model.Review;
+import com.example.Hotel_booking.model.User;
 import com.example.Hotel_booking.repository.ReviewRepository;
 import com.example.Hotel_booking.request.ReviewRequest;
 import com.example.Hotel_booking.response.ReviewResponse;
@@ -13,9 +14,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReviewService {
     private final ReviewRepository reviewRepository;
-    private Review convertToReview(ReviewRequest reviewRequest) {
+    private Review convertToReview(ReviewRequest reviewRequest, User user) {
         Review review = new Review();
-        review.setReviewerName(reviewRequest.getReviewerName());
+        review.setReviewerName(user.getFirstName() + " " + user.getLastName());
+        review.setUserId(user.getUserId());
         review.setRating(reviewRequest.getRating());
         review.setReview(reviewRequest.getReview());
         review.setStayDate(reviewRequest.getStayDate());

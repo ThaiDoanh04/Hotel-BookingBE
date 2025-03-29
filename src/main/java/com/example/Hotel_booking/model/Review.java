@@ -18,6 +18,12 @@ public class Review {
     private Long id;
 
     @Column(nullable = false)
+    private Long hotelId;
+
+    @Column(nullable = false)
+    private Long userId;
+
+    @Column(nullable = false)
     private String reviewerName;
 
     @Column(nullable = false)
@@ -28,6 +34,4 @@ public class Review {
     private LocalDateTime stayDate;
 
     private boolean verified;
-
-    private Long hotelId;
 } 

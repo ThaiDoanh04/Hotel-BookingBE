@@ -10,4 +10,7 @@ import java.util.List;
 public interface ReviewRepository extends JpaRepository<Review, Long> {
     List<Review> findByHotelId(Long hotelId);
     void deleteByHotelId(Long hotelId);
+    
+    // Thêm query mới để tìm review theo userId
+    List<Review> findByUserId(Long userId);
 }

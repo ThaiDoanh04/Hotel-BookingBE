@@ -3,9 +3,11 @@ package com.example.Hotel_booking.service;
 import com.example.Hotel_booking.model.BookedHotel;
 import com.example.Hotel_booking.model.Hotel;
 import com.example.Hotel_booking.model.Review;
+import com.example.Hotel_booking.model.User;
 import com.example.Hotel_booking.repository.BookingRepository;
 import com.example.Hotel_booking.repository.HotelRepository;
 import com.example.Hotel_booking.repository.ReviewRepository;
+import com.example.Hotel_booking.repository.UserRepository;
 import com.example.Hotel_booking.request.HotelFilterRequest;
 import com.example.Hotel_booking.request.HotelRequest;
 import com.example.Hotel_booking.request.ReviewRequest;
@@ -20,6 +22,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.example.Hotel_booking.security.JwtUtil;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -33,6 +37,8 @@ public class HotelService {
     private final ReviewRepository reviewRepository;
     private final ReviewService reviewService;
     private final BookingRepository bookingRepository;
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
 
     @Transactional
     public Hotel addHotel(HotelRequest request) {
@@ -47,22 +53,29 @@ public class HotelService {
         return hotelRepository.save(hotel);
     }
 
-    private Review convertToReview(ReviewRequest reviewRequest) {
+    @Transactional
+    public Review addReview(Long hotelId, ReviewRequest reviewRequest, String token) {
+        // Tìm khách sạn
+        Hotel hotel = hotelRepository.findById(hotelId)
+                .orElseThrow(() -> new RuntimeException("Hotel not found"));
+        
+        // Lấy email từ token JWT
+        String email = jwtUtil.extractEmail(token);
+        
+        // Tìm user từ email
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
         Review review = new Review();
-        review.setReviewerName(reviewRequest.getReviewerName());
         review.setRating(reviewRequest.getRating());
         review.setReview(reviewRequest.getReview());
         review.setStayDate(reviewRequest.getStayDate());
         review.setVerified(reviewRequest.isVerified());
-        return review;
-    }
-
-    @Transactional
-    public Review addReview(Long hotelId, ReviewRequest reviewRequest) {
-        Hotel hotel = hotelRepository.findById(hotelId)
-                .orElseThrow(() -> new RuntimeException("Hotel not found"));
         
-        Review review = convertToReview(reviewRequest);
+        // Set userId và reviewerName từ user (không lấy từ reviewRequest)
+        review.setUserId(user.getUserId());
+        review.setReviewerName(user.getFirstName() + " " + user.getLastName());
+        
         review.setHotelId(hotelId);
         reviewRepository.save(review);
 
@@ -106,6 +119,22 @@ public class HotelService {
     public List<Review> getHotelReviews(Long hotelId) {
         return reviewRepository.findByHotelId(hotelId);
     }
+
+    public List<Review> getHotelReviewsWithUserInfo(Long hotelId) {
+        List<Review> reviews = reviewRepository.findByHotelId(hotelId);
+        
+        // Cập nhật thông tin reviewerName cho mỗi review từ user tương ứng
+        reviews.forEach(review -> {
+            if (review.getUserId() != null) {
+                userRepository.findById(review.getUserId()).ifPresent(user -> {
+                    review.setReviewerName(user.getFirstName() + " " + user.getLastName());
+                });
+            }
+        });
+        
+        return reviews;
+    }
+
     public HotelReponse toHotelReponse(Hotel hotel) {
         List<ReviewResponse> reviewResponses = reviewService.getReviewsByHotelId(hotel.getHotelId());
         return HotelReponse.builder()

@@ -29,7 +29,8 @@ public class HotelController {
     @PostMapping("/{hotelCode}/reviews")
     public ResponseEntity<Review> addReview(
             @PathVariable String hotelCode,
-            @RequestBody ReviewRequest reviewRequest) {
+            @RequestBody ReviewRequest reviewRequest,
+            @RequestHeader("Authorization") String token) {
 
         Long hotelId;
         try {
@@ -38,7 +39,10 @@ public class HotelController {
             return ResponseEntity.badRequest().build();
         }
 
-        return ResponseEntity.ok(hotelService.addReview(hotelId, reviewRequest));
+        // Loại bỏ phần "Bearer " từ token
+        String jwtToken = token.replace("Bearer ", "");
+        
+        return ResponseEntity.ok(hotelService.addReview(hotelId, reviewRequest, jwtToken));
     }
 
     /**
@@ -58,7 +62,7 @@ public class HotelController {
 
     @GetMapping("/{hotelId}/reviews")
     public ResponseEntity<List<Review>> getHotelReviews(@PathVariable Long hotelId) {
-        return ResponseEntity.ok(hotelService.getHotelReviews(hotelId));
+        return ResponseEntity.ok(hotelService.getHotelReviewsWithUserInfo(hotelId));
     }
 
     @PutMapping("/{hotelId}")
@@ -105,24 +109,24 @@ public class HotelController {
         if (starRating != null) {
             switch (starRating) {
                 case 1:
-                    minRating = 0.0;
-                    maxRating = 1.0;
-                    break;
+                minRating = 0.0;
+                maxRating = 1.8;  // 1 sao: 0.0-1.8
+                break;
                 case 2:
-                    minRating = 1.0;
-                    maxRating = 2.0;
+                    minRating = 1.8;
+                    maxRating = 2.8;  // 2 sao: 1.8-2.8
                     break;
                 case 3:
-                    minRating = 2.0;
-                    maxRating = 3.0;
+                    minRating = 2.8;
+                    maxRating = 3.8;  // 3 sao: 2.8-3.8
                     break;
                 case 4:
-                    minRating = 3.0;
-                    maxRating = 4.0;
+                    minRating = 3.8;
+                    maxRating = 4.5;  // 4 sao: 3.8-4.5
                     break;
                 case 5:
-                    minRating = 4.0;
-                    maxRating = 5.0;
+                    minRating = 4.5;
+                    maxRating = 5.0;  // 5 sao: 4.5-5.0
                     break;
                 default:
                     break;
